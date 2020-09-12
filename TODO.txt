@@ -1,0 +1,13 @@
+
+TODO:
+* Understand + learn l5kit
+* Read motion prediction papers
+* Read some notebooks
+* EDA to completely understand data (jupyter notebook)
+* Baseline model + full pipeline (train.py and inference as notebook)
+* Experimentation new models
+
+Deadlines:
+November 18, 2020 - Team Merger deadline. This is the last day participants may join or merge teams.
+
+November 25, 2020 - Final submission deadline.
