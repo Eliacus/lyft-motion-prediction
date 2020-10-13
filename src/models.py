@@ -1,8 +1,30 @@
+import os
+
 import pytorch_lightning as pl
 import torch
+import torch.nn.functional as F
 import torch.nn as nn
+from l5kit.configs import load_config_data
+from l5kit.data import ChunkedDataset, LocalDataManager
+from l5kit.dataset import AgentDataset, EgoDataset
+from l5kit.evaluation import (
+    compute_metrics_csv,
+    create_chopped_dataset,
+    read_gt_csv,
+    write_pred_csv,
+)
+from l5kit.evaluation.chop_dataset import MIN_FUTURE_STEPS
+from l5kit.evaluation.metrics import neg_multi_log_likelihood, time_displace
+from l5kit.geometry import transform_points
+from l5kit.rasterization import build_rasterizer
+from l5kit.visualization import (
+    PREDICTED_POINTS_COLOR,
+    TARGET_POINTS_COLOR,
+    draw_trajectory,
+)
+from prettytable import PrettyTable
+from torch.utils.data import DataLoader
 from torchvision.models.resnet import resnet50
-import torch.functional as F
 
 
 class resnet_baseline(pl.LightningModule):
@@ -39,22 +61,87 @@ class resnet_baseline(pl.LightningModule):
         return self.model(x)
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters, lr=self.lr)
+        return torch.optim.Adam(self.parameters(), lr=self.lr)
 
     def training_step(self, batch, batch_idx):
-        x, y = batch
+        x = batch["image"]
+        y = batch["target_positions"]
+
+        target_availabilities = batch["target_availabilities"].unsqueeze(-1)
 
         logits = self(x).reshape(y.shape)
 
         loss = F.mse_loss(logits, y)
+        loss = loss * target_availabilities
+        loss = loss.mean()
 
-        result = pl.TrainResult(loss)
+        # result = pl.TrainResult(loss)
 
-        result.log("train_loss", loss, prog_bar=True)
+        # result.log("train_loss", loss, prog_bar=True)
 
-        return result
+        # Option 1:
+        # return loss
+
+        # Option 2:
+        # return {'loss': loss, 'anything_else': ...}
+
+        # Option 3:
+        # return {'loss': loss, 'hiddens': hiddens, 'anything_else': ...}
+
+        return loss
 
 
 # TODO: Finish baselines
 
 # TODO: create a datamodule for the lyft dataset
+
+
+class LyftDataModule(pl.LightningDataModule):
+    def __init__(self, data_path, config_path):
+        super().__init__()
+        self.data_path = data_path
+        self.config_path = config_path
+
+        os.environ["L5KIT_DATA_FOLDER"] = data_path
+        self.dm = LocalDataManager(None)
+
+        self.cfg = load_config_data(config_path)
+
+        self.train_cfg = self.cfg["train_data_loader"]
+        self.val_cfg = self.cfg["val_data_loader"]
+        self.test_cfg = self.cfg["test_data_loader"]
+
+        self.rasterizer = build_rasterizer(self.cfg, self.dm)
+
+    def setup(self, stage=None):
+        train_zarr = ChunkedDataset(self.dm.require(self.train_cfg["key"])).open()
+        val_zarr = ChunkedDataset(self.dm.require(self.val_cfg["key"])).open()
+        test_zarr = ChunkedDataset(self.dm.require(self.test_cfg["key"])).open()
+
+        self.train_dataset = AgentDataset(self.cfg, train_zarr, self.rasterizer)
+        self.train_dataset = AgentDataset(self.cfg, val_zarr, self.rasterizer)
+        self.train_dataset = AgentDataset(self.cfg, test_zarr, self.rasterizer)
+
+    def train_dataloader(self):
+        return DataLoader(
+            self.train_dataset,
+            shuffle=self.train_cfg["shuffle"],
+            batch_size=self.train_cfg["batch_size"],
+            num_workers=self.train_cfg["num_workers"],
+        )
+
+    def val_dataloader(self):
+        return DataLoader(
+            self.val_dataset,
+            shuffle=self.val_cfg["shuffle"],
+            batch_size=self.val_cfg["batch_size"],
+            num_workers=self.val_cfg["num_workers"],
+        )
+
+    def test_dataloader(self):
+        return DataLoader(
+            self.test_dataset,
+            shuffle=self.test_cfg["shuffle"],
+            batch_size=self.test_cfg["batch_size"],
+            num_workers=self.test_cfg["num_workers"],
+        )

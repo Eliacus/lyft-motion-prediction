@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from l5kit.configs import load_config_data
@@ -19,9 +20,10 @@ from l5kit.visualization import (
     draw_trajectory,
 )
 from prettytable import PrettyTable
+from pytorch_lightning import Trainer
+from torch.utils.data import DataLoader
 
 import models
-import os
 
 # set env variable for data
 os.environ["L5KIT_DATA_FOLDER"] = "data"
@@ -33,5 +35,13 @@ cfg = load_config_data("src/train_config.yaml")
 lr = 0.0003
 num_history_channels = (cfg["model_params"]["history_num_frames"] + 1) * 2
 
+data_path = "/home/elias/Documents/lyft-motion-prediction/data"
+config_path = "/home/elias/Documents/lyft-motion-prediction/src/train_config.yaml"
 
-model = models.resnet_baseline(lr, num_history_channels, cfg)
+lyft_data = models.LyftDataModule(data_path, config_path)
+
+model = models.resnet_baseline(lr, num_history_channels, lyft_data.cfg)
+
+trainer = Trainer(gpus=1)
+
+trainer.fit(model, lyft_data)
