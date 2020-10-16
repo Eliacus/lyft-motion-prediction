@@ -135,3 +135,4 @@ data/
 # VScode
 .vscode
 
+lightning_logs/
