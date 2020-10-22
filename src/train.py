@@ -1,4 +1,5 @@
 import os
+from sys import path
 
 from l5kit.configs import load_config_data
 from l5kit.data import LocalDataManager
@@ -12,7 +13,11 @@ import models
 logger = TensorBoardLogger("tb_logs", name="my_model")
 
 # Create the validation loss checkpoint
-checkpoint_callback = ModelCheckpoint(monitor="val_loss", mode="min")
+checkpoint_callback = ModelCheckpoint(
+    filepath="tb_logs/my_model/version_17/checkpoints/",
+    monitor="val_loss",
+    mode="min",
+)
 
 lr = 0.003
 num_modes = 3
@@ -20,21 +25,22 @@ num_modes = 3
 data_path = "/home/elias/Documents/lyft-motion-prediction/data"
 config_path = "/home/elias/Documents/lyft-motion-prediction/src/train_config.yaml"
 
-# data_path = "/home/elias.nehme1/Documents/lyft-motion-prediction/data"
-# config_path = (
-#    "/home/elias.nehme1/Documents/lyft-motion-prediction/src/train_config.yaml"
-# )
-
 lyft_data = models.LyftDataModule(data_path, config_path)
 
-model = models.resnet_baseline(lyft_data.cfg, lr, num_modes)
 
-trainer = Trainer(
-    logger=logger,
-    checkpoint_callback=checkpoint_callback,
-    val_check_interval=0.1,
-    gpus=1,
-    precision=16,
+# model = models.resnet_baseline(lyft_data.cfg, lr, num_modes)
+
+model = models.resnet_baseline.load_from_checkpoint(
+    "../tb_logs/my_model/version_17/checkpoints/epoch=0-v0.ckpt-v0.ckpt"
 )
 
-trainer.fit(model, lyft_data)
+# trainer = Trainer(
+#    logger=logger,
+#    checkpoint_callback=checkpoint_callback,
+#    val_check_interval=10000,
+#    gpus=1,
+#    precision=16,
+#    limit_val_batches=100,
+# )
+
+# trainer.fit(model, lyft_data)
