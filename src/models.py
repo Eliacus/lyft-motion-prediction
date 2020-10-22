@@ -147,13 +147,17 @@ class LyftDataModule(pl.LightningDataModule):
         self.rasterizer = build_rasterizer(self.cfg, self.dm)
 
     def setup(self, stage=None):
+        test_mask = np.load(f"{self.data_path}/scenes/mask.npz")["arr_0"]
+
         train_zarr = ChunkedDataset(self.dm.require(self.train_cfg["key"])).open()
         val_zarr = ChunkedDataset(self.dm.require(self.val_cfg["key"])).open()
         test_zarr = ChunkedDataset(self.dm.require(self.test_cfg["key"])).open()
 
         self.train_dataset = AgentDataset(self.cfg, train_zarr, self.rasterizer)
         self.val_dataset = AgentDataset(self.cfg, val_zarr, self.rasterizer)
-        self.test_dataset = AgentDataset(self.cfg, test_zarr, self.rasterizer)
+        self.test_dataset = AgentDataset(
+            self.cfg, test_zarr, self.rasterizer, agents_mask=test_mask
+        )
 
     def train_dataloader(self):
         return DataLoader(
