@@ -75,6 +75,7 @@ timestamps_list = []
 track_id_list = []
 
 for data in tqdm(val_dataloader):
+    print(data["image"].shape)
     pred, confidences = model(data["image"].to(device))
     pred = convert_agent_coordinates_to_world_offsets(
         pred.detach().cpu().numpy(),
