@@ -135,5 +135,9 @@ data/
 # VScode
 .vscode
 
+# pl logs
 lightning_logs/
 tb_logs/
+
+# model weights
+*.ckpt
