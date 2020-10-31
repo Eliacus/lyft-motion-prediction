@@ -38,7 +38,7 @@ def pytorch_neg_multi_log_likelihood_batch(
     ), f"expected 1D (Modes) array for confidences, got {confidences.shape}"
     assert torch.allclose(
         torch.sum(confidences, dim=1), confidences.new_ones((batch_size,))
-    ), "confidences should sum to 1"
+    ), "confidences should sum to 1, got: " + torch.sum(confidences, dim=1) + confidences 
     assert avails.shape == (
         batch_size,
         future_len,

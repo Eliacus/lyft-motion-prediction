@@ -1,33 +1,16 @@
 import os
-from pathlib import Path
-from utils import pytorch_neg_multi_log_likelihood_batch
-import numpy as np
+
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from l5kit.configs import load_config_data
 from l5kit.data import ChunkedDataset, LocalDataManager
-from l5kit.dataset import AgentDataset, EgoDataset
-from l5kit.evaluation import (
-    compute_metrics_csv,
-    create_chopped_dataset,
-    read_gt_csv,
-    write_pred_csv,
-)
-from l5kit.evaluation.chop_dataset import MIN_FUTURE_STEPS
-from l5kit.evaluation.metrics import neg_multi_log_likelihood, time_displace
-from l5kit.geometry import transform_points
+from l5kit.dataset import AgentDataset
 from l5kit.rasterization import build_rasterizer
-from l5kit.visualization import (
-    PREDICTED_POINTS_COLOR,
-    TARGET_POINTS_COLOR,
-    draw_trajectory,
-)
-from prettytable import PrettyTable
-from pytorch_lightning.loggers import TensorBoardLogger
 from torch.utils.data import DataLoader
 from torchvision.models.resnet import resnet50
+
+from utils import pytorch_neg_multi_log_likelihood_batch
 
 
 class resnet_baseline(pl.LightningModule):
@@ -100,7 +83,16 @@ class resnet_baseline(pl.LightningModule):
         loss = self.criterion(y, pred, confidences, target_availabilities)
 
         # self.logger.experiment.add_scalar("loss", loss, global_step=batch_idx)
-        self.logger.log_metrics({"train_loss": loss}, step=self.global_step)
+        self.logger.log_metrics(
+            {
+                "train_loss": loss,
+                "confidence_sum": torch.sum(confidences, dim=1)[0],
+                "confidences_1": confidences[0][0],
+                "confidences_2": confidences[0][1],
+                "confidences_3": confidences[0][2],
+            },
+            step=self.global_step,
+        )
 
         # Option 1:
         return loss
@@ -121,7 +113,6 @@ class resnet_baseline(pl.LightningModule):
 
         loss = self.criterion(y, pred, confidences, target_availabilities)
 
-        # self.logger.experiment.add_scalar("loss", loss, global_step=batch_idx)
         self.logger.log_metrics({"val_loss": loss}, step=self.global_step)
 
         self.log("val_loss", loss)
@@ -159,7 +150,6 @@ class LyftDataModule(pl.LightningDataModule):
         # )
 
     def train_dataloader(self):
-
         return DataLoader(
             self.train_dataset,
             shuffle=self.train_cfg["shuffle"],
@@ -175,10 +165,10 @@ class LyftDataModule(pl.LightningDataModule):
             num_workers=self.val_cfg["num_workers"],
         )
 
-    def test_dataloader(self):
-        return DataLoader(
-            self.test_dataset,
-            shuffle=self.test_cfg["shuffle"],
-            batch_size=self.test_cfg["batch_size"],
-            num_workers=self.test_cfg["num_workers"],
-        )
+    # def test_dataloader(self):
+    #     return DataLoader(
+    #         self.test_dataset,
+    #         shuffle=self.test_cfg["shuffle"],
+    #         batch_size=self.test_cfg["batch_size"],
+    #         num_workers=self.test_cfg["num_workers"],
+    #     )
