@@ -32,15 +32,15 @@ model = models.resnet_baseline.load_from_checkpoint(
 
 # Generating a chopped dataset
 num_frames_to_chop = 100
-# eval_base_path = create_chopped_dataset(
+#eval_base_path = create_chopped_dataset(
 #     lyft_data_module.dm.require(lyft_data_module.val_cfg["key"]),
 #     lyft_data_module.cfg["raster_params"]["filter_agents_threshold"],
 #     num_frames_to_chop,
 #     lyft_data_module.cfg["model_params"]["future_num_frames"],
 #     MIN_FUTURE_STEPS,
-# )
+#)
 
-eval_base_path = "/home/elias.nehme1/Documents/lyft-motion-prediction/data/scenes/validate_chopped_100"
+#eval_base_path = "/home/elias.nehme1/Documents/lyft-motion-prediction/data/scenes/validate_chopped_100"
 val_zarr_path = str(
     Path(eval_base_path)
     / Path(lyft_data_module.dm.require(lyft_data_module.val_cfg["key"])).name
