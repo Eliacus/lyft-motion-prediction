@@ -20,13 +20,13 @@ class resnet_baseline(pl.LightningModule):
     into a pytorch lightning module.
     """
 
-    def __init__(self, cfg, lr, num_modes=3):
+    def __init__(self, cfg):
         super(resnet_baseline, self).__init__()
         self.save_hyperparameters()
 
         self.cfg = self.hparams.cfg  # type: ignore
-        self.lr = self.hparams.lr  # type: ignore
-        self.num_modes = self.hparams.num_modes  # type: ignore
+        self.lr = self.cfg["train_params"]["learning_rate"]  # type: ignore
+        self.num_modes = self.cfg["model_params"]["num_modes"]  # type: ignore
 
         # change input channels number to match the rasterizer's output
         num_history_channels = (self.cfg["model_params"]["history_num_frames"] + 1) * 2
@@ -82,7 +82,6 @@ class resnet_baseline(pl.LightningModule):
 
         loss = self.criterion(y, pred, confidences, target_availabilities)
 
-        # self.logger.experiment.add_scalar("loss", loss, global_step=batch_idx)
         self.logger.log_metrics(
             {
                 "train_loss": loss,
@@ -94,14 +93,8 @@ class resnet_baseline(pl.LightningModule):
             step=self.global_step,
         )
 
-        # Option 1:
         return loss
 
-        # Option 2:
-        # return {"train_loss": loss}
-
-        # Option 3:
-        # return {'loss': loss, 'hiddens': hiddens, 'anything_else': ...}
 
     def validation_step(self, batch, batch_idx):
         x = batch["image"]
