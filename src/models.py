@@ -137,11 +137,7 @@ class LyftDataModule(pl.LightningDataModule):
         val_zarr = ChunkedDataset(self.dm.require(self.val_cfg["key"])).open()
         self.val_dataset = AgentDataset(self.cfg, val_zarr, self.rasterizer)
 
-        # test_zarr = ChunkedDataset(self.dm.require(self.val_cfg["key"])).open()
-        # self.test_dataset = AgentDataset(
-        #    self.cfg, test_zarr, self.rasterizer, agents_mask=test_mask
-        # )
-
+    
     def train_dataloader(self):
         return DataLoader(
             self.train_dataset,
@@ -158,10 +154,15 @@ class LyftDataModule(pl.LightningDataModule):
             num_workers=self.val_cfg["num_workers"],
         )
 
-    # def test_dataloader(self):
-    #     return DataLoader(
-    #         self.test_dataset,
-    #         shuffle=self.test_cfg["shuffle"],
-    #         batch_size=self.test_cfg["batch_size"],
-    #         num_workers=self.test_cfg["num_workers"],
-    #     )
+    def test_dataloader(self):
+        test_zarr = ChunkedDataset(self.dm.require(self.val_cfg["key"])).open()
+        self.test_dataset = AgentDataset(
+            self.cfg, test_zarr, self.rasterizer, agents_mask=test_mask
+        )
+
+        return DataLoader(
+            self.test_dataset,
+            shuffle=self.test_cfg["shuffle"],
+            batch_size=self.test_cfg["batch_size"],
+            num_workers=self.test_cfg["num_workers"],
+        )
