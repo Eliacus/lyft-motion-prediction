@@ -20,14 +20,15 @@ class resnet_baseline(pl.LightningModule):
     into a pytorch lightning module.
     """
 
-    def __init__(self, cfg):
+    def __init__(self, cfg, lr, num_modes):
         super(resnet_baseline, self).__init__()
         self.save_hyperparameters()
 
         self.cfg = self.hparams.cfg  # type: ignore
-        self.lr = self.cfg["train_params"]["learning_rate"]  # type: ignore
-        self.num_modes = self.cfg["model_params"]["num_modes"]  # type: ignore
-
+        # self.lr = self.cfg["train_params"]["learning_rate"]  # type: ignore
+        # self.num_modes = self.cfg["train_params"]["num_modes"]  # type: ignore
+        self.lr = lr
+        self.num_modes = num_modes
         # change input channels number to match the rasterizer's output
         num_history_channels = (self.cfg["model_params"]["history_num_frames"] + 1) * 2
         self.num_in_channels = 3 + num_history_channels
@@ -95,7 +96,6 @@ class resnet_baseline(pl.LightningModule):
 
         return loss
 
-
     def validation_step(self, batch, batch_idx):
         x = batch["image"]
         y = batch["target_positions"]
@@ -137,7 +137,6 @@ class LyftDataModule(pl.LightningDataModule):
         val_zarr = ChunkedDataset(self.dm.require(self.val_cfg["key"])).open()
         self.val_dataset = AgentDataset(self.cfg, val_zarr, self.rasterizer)
 
-    
     def train_dataloader(self):
         return DataLoader(
             self.train_dataset,
