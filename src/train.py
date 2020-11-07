@@ -10,12 +10,15 @@ from pytorch_lightning.loggers import TensorBoardLogger
 
 import models as models
 
-torch.multiprocessing.set_sharing_strategy("file_system")
+# torch.multiprocessing.set_sharing_strategy("file_system")
+
+# Set up paths
+root_dir = os.getcwd()
+data_path = root_dir + "/data"
+config_path = root_dir + "/src/train_config.yaml"
 
 # Create the tensorboard logger
-logger = TensorBoardLogger(
-    "/home/elias/Documents/lyft-motion-prediction/tb_logs/", name="multi_modal_model"
-)
+logger = TensorBoardLogger(root_dir + "/tb_logs/", name="multi_modal_model")
 
 # Create the validation loss checkpoint
 checkpoint_callback = ModelCheckpoint(
@@ -23,18 +26,10 @@ checkpoint_callback = ModelCheckpoint(
     mode="min",
 )
 
-lr = 0.001
-num_modes = 3
-
-root_dir = os.getcwd()
-data_path = root_dir + "/data"
-config_path = root_dir + "/src/train_config.yaml"
-
 lyft_data = models.LyftDataModule(data_path, config_path)
 
-
-model = models.resnet_baseline(lyft_data.cfg, lr, num_modes)
-
+model = models.resnet_baseline(lyft_data.cfg)
+#
 # model = models.resnet_baseline.load_from_checkpoint(
 #    "../tb_logs/my_model/version_17/checkpoints/epoch=0-v0.ckpt-v0
 # )
