@@ -43,6 +43,12 @@ raster_params:
   # whether to completely disable traffic light faces in the semantic rasterizer
   disable_traffic_light_faces: False
 
+  ###################
+## Training parameters
+train_params:
+  learning_rate: 0.001
+  num_modes: 3
+
 ###################
 ## Data loader options
 train_data_loader:
@@ -62,3 +68,4 @@ test_data_loader:
   batch_size: 4
   shuffle: False
   num_workers: 4
+daððððððð€€dsa€(())

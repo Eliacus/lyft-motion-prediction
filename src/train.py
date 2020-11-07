@@ -26,8 +26,9 @@ checkpoint_callback = ModelCheckpoint(
 lr = 0.001
 num_modes = 3
 
-data_path = "/home/elias/Documents/lyft-motion-prediction/data"
-config_path = "/home/elias/Documents/lyft-motion-prediction/src/train_config.yaml"
+root_dir = os.getcwd()
+data_path = root_dir + "/data"
+config_path = root_dir + "/src/train_config.yaml"
 
 lyft_data = models.LyftDataModule(data_path, config_path)
 
@@ -41,7 +42,7 @@ model = models.resnet_baseline(lyft_data.cfg, lr, num_modes)
 trainer = Trainer(
     logger=logger,
     checkpoint_callback=checkpoint_callback,
-    val_check_interval=10000,
+    val_check_interval=50,
     gpus=1,
     precision=16,
     limit_val_batches=50,

@@ -20,15 +20,14 @@ class resnet_baseline(pl.LightningModule):
     into a pytorch lightning module.
     """
 
-    def __init__(self, cfg, lr, num_modes):
+    def __init__(self, cfg):
         super(resnet_baseline, self).__init__()
         self.save_hyperparameters()
 
         self.cfg = self.hparams.cfg  # type: ignore
-        # self.lr = self.cfg["train_params"]["learning_rate"]  # type: ignore
-        # self.num_modes = self.cfg["train_params"]["num_modes"]  # type: ignore
-        self.lr = lr
-        self.num_modes = num_modes
+        self.lr = self.cfg["train_params"]["learning_rate"]  # type: ignore
+        self.num_modes = self.cfg["train_params"]["num_modes"]  # type: ignore
+
         # change input channels number to match the rasterizer's output
         num_history_channels = (self.cfg["model_params"]["history_num_frames"] + 1) * 2
         self.num_in_channels = 3 + num_history_channels
@@ -126,7 +125,6 @@ class LyftDataModule(pl.LightningDataModule):
 
         self.train_cfg = self.cfg["train_data_loader"]
         self.val_cfg = self.cfg["val_data_loader"]
-        self.test_cfg = self.cfg["test_data_loader"]
 
         self.rasterizer = build_rasterizer(self.cfg, self.dm)
 
@@ -157,11 +155,4 @@ class LyftDataModule(pl.LightningDataModule):
         test_zarr = ChunkedDataset(self.dm.require(self.val_cfg["key"])).open()
         self.test_dataset = AgentDataset(
             self.cfg, test_zarr, self.rasterizer, agents_mask=test_mask
-        )
-
-        return DataLoader(
-            self.test_dataset,
-            shuffle=self.test_cfg["shuffle"],
-            batch_size=self.test_cfg["batch_size"],
-            num_workers=self.test_cfg["num_workers"],
         )
