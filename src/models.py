@@ -113,6 +113,9 @@ class resnet_baseline(pl.LightningModule):
 
 
 class LyftDataModule(pl.LightningDataModule):
+    """
+    A pytorch lightning data module for the lyft l5 dataset. Contains a test, validation and test dataset.
+    """
     def __init__(self, data_path, config_path):
         super().__init__()
         self.data_path = data_path

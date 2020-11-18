@@ -1,3 +1,5 @@
+
+""" Main script for training a resnest model on the l5 dataset. """
 import os
 from sys import path
 
@@ -9,6 +11,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
 
 import models as models
+
 
 # torch.multiprocessing.set_sharing_strategy("file_system")
 
@@ -29,7 +32,7 @@ checkpoint_callback = ModelCheckpoint(
 lyft_data = models.LyftDataModule(data_path, config_path)
 
 model = models.resnet_baseline(lyft_data.cfg)
-#
+
 # model = models.resnet_baseline.load_from_checkpoint(
 #    "../tb_logs/my_model/version_17/checkpoints/epoch=0-v0.ckpt-v0
 # )
