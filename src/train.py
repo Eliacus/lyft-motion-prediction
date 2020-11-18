@@ -18,7 +18,7 @@ data_path = root_dir + "/data"
 config_path = root_dir + "/src/train_config.yaml"
 
 # Create the tensorboard logger
-logger = TensorBoardLogger(root_dir + "/tb_logs/", name="multi_modal_model")
+logger = TensorBoardLogger(root_dir + "/tb_logs/", name="resnest")
 
 # Create the validation loss checkpoint
 checkpoint_callback = ModelCheckpoint(
@@ -37,10 +37,10 @@ model = models.resnet_baseline(lyft_data.cfg)
 trainer = Trainer(
     logger=logger,
     checkpoint_callback=checkpoint_callback,
-    val_check_interval=50,
+    val_check_interval=5000,
     gpus=1,
     precision=16,
-    limit_val_batches=50,
+    limit_val_batches=100,
 )
 
 # resume_from_checkpoint="/home/elias/Documents/lyft-motion-prediction/tb_logs/my_model/version_17/checkpoints/epoch=1.ckpt",

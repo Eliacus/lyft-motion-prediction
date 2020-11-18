@@ -8,8 +8,8 @@ from l5kit.data import ChunkedDataset, LocalDataManager
 from l5kit.dataset import AgentDataset
 from l5kit.rasterization import build_rasterizer
 from torch.utils.data import DataLoader
-from torchvision.models.resnet import resnet50
-
+#from torchvision.models.resnet import resnet50
+from resnest.torch import resnest50
 from utils import pytorch_neg_multi_log_likelihood_batch
 
 
@@ -33,14 +33,14 @@ class resnet_baseline(pl.LightningModule):
         self.num_in_channels = 3 + num_history_channels
         self.future_len = cfg["model_params"]["future_num_frames"]
 
-        self.model = resnet50(pretrained=True)
+        self.model = resnest50(pretrained=True)
 
         self.model.conv1 = nn.Conv2d(
             self.num_in_channels,
-            self.model.conv1.out_channels,
-            kernel_size=self.model.conv1.kernel_size,
-            stride=self.model.conv1.stride,
-            padding=self.model.conv1.padding,
+            64,
+            kernel_size=3,
+            stride=2,
+            padding=1,
             bias=False,
         )
 
